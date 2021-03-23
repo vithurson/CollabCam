@@ -2,36 +2,40 @@ import cv2
 import sys
 import time
 import socket
-import cv2
+import cv2 
 import numpy
 from time import sleep
 
-TCP_IP = "localhost" 
+#TCP_IP = "localhost" 
 TCP_PORT = 5003
-sock = socket.socket()
-sock.connect((TCP_IP, TCP_PORT))
+TCP_IP = '192.168.86.80'
 
-#TCP_IP = '192.168.119.197'
 shared_region = [0,33,50,66,100]
-res_of_region = [360,160,96,70]
+res_of_region = [360,160,96,70,5]
 
 percentage = int(sys.argv[1])
 resolution = int(sys.argv[2])
 iters = int(sys.argv[3])
 
 
+reg_size = res_of_region[resolution]
+per      = shared_region[percentage]
 vid = cv2.VideoCapture(0) 
 vid.set(cv2.CAP_PROP_FRAME_WIDTH,512)
 vid.set(cv2.CAP_PROP_FRAME_HEIGHT,512)
-
+while(1):
+    ret, image = vid.read() 
+    sleep(1000)
+    pass
+sock = socket.socket()
+sock.connect((TCP_IP, TCP_PORT))
+print(per,reg_size)
 start_time = time.time()
 for j in range(iters):
+    start_time1 = time.time()
     ret, image = vid.read() 
-    
     num_regions = ((percentage!=0) and (percentage!=4)) +1
     
-    reg_size = res_of_region[resolution]
-    per      = shared_region[percentage]
     images=[]
     if(num_regions==2):
         im1_x_r = int(reg_size * per/100)
@@ -53,6 +57,8 @@ for j in range(iters):
         size = str(lent).ljust(16).encode('utf-8')
         sock.send(size)
         sock.send(stringData)
+    while((time.time()-start_time1)<0.1):
+        pass
 end_time = time.time()
 vid.release()
 sock.close()

@@ -6,7 +6,8 @@ import cv2
 import numpy
 res = [2100,1800,1500,1200,900,600,300]
 
-TCP_IP = '192.168.119.197'
+#TCP_IP = '192.168.119.197'
+TCP_IP = '192.168.86.80'
 #TCP_IP = 'localhost'
 TCP_PORT = 5003
 cur_res = res[int(sys.argv[1])]
