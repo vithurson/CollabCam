@@ -4,24 +4,25 @@ import time
 import socket
 import cv2
 import numpy
-res = [2100,1800,1500,1200,900,600,300]
-
-#TCP_IP = '192.168.98.146'
-TCP_IP = '192.168.119.197'
-TCP_PORT = 5003
+res_x = [1920,1600,1366,1280,1024]
+res_y = [1080,900, 768,  720, 576]
+#TCP_IP = 'localhost'
+TCP_IP = '192.168.86.86'
+TCP_PORT = 5002
 iters = int(sys.argv[1])
 xs = int(sys.argv[2])
 ys = int(sys.argv[3])
 
-cur_res = res[1]
+cur_res_x = res_x[3]
+cur_res_y = res_y[3]
 # Load .png image
 image = cv2.imread('test.jpg')
+image = image[0:1080,0:1920]
 crop_images=[]
 secs =  xs*ys
-xsize = int(cur_res/xs)
-ysize = int(cur_res/ys)
-image = image[0:2100,0:2100] 
-image = cv2.resize(image, (cur_res,cur_res))
+xsize = int(cur_res_x/xs)
+ysize = int(cur_res_y/ys)
+image = cv2.resize(image, (cur_res_x,cur_res_y))
 for y in range(ys):
     for x in range(xs):
         ylow= ysize*y 
@@ -36,7 +37,7 @@ data_size = []
 sock = socket.socket()
 sock.connect((TCP_IP, TCP_PORT))
 for crop_image in crop_images:
-    encode_param=[int(cv2.IMWRITE_JPEG_QUALITY),100]
+    encode_param=[int(cv2.IMWRITE_JPEG_QUALITY),90]
     result, imgencode = cv2.imencode('.jpg', crop_image, encode_param)
     data = numpy.array(imgencode)
     stringData = data.tostring()
