@@ -7,8 +7,8 @@ import numpy
 from time import sleep
 
 #TCP_IP = "localhost" 
-TCP_PORT = 5003
-TCP_IP = '192.168.86.87'
+UDP_PORT = 5003
+UDP_IP = '192.168.86.87'
 
 shared_region = [0,33,50,66,100]
 res_of_region = [360,160,96,70,5]
@@ -23,10 +23,19 @@ per      = shared_region[percentage]
 vid = cv2.VideoCapture(0) 
 vid.set(cv2.CAP_PROP_FRAME_WIDTH,512)
 vid.set(cv2.CAP_PROP_FRAME_HEIGHT,512)
-sock = socket.socket()
-sock.connect((TCP_IP, TCP_PORT))
+
+sock = socket.socket(socket.AF_INET, # Internet
+                     socket.SOCK_DGRAM) # UDP
+
 print(per,reg_size)
 start_time = time.time()
+def send_chuncks(data,lent):
+    for i in range(0,lent,65000):
+        dt = data[i:i+65000]
+        sock.sendto(dt,(UDP_IP, UDP_PORT))
+    if((lent%65000) != 0):
+        dt = data[i+65000:]
+        sock.sendto(dt,(UDP_IP, UDP_PORT))
 for j in range(iters):
     start_time1 = time.time()
     ret, image = vid.read() 
@@ -51,9 +60,9 @@ for j in range(iters):
         stringData = data.tostring()
         lent = len(stringData)
         size = str(lent).ljust(16).encode('utf-8')
-        sock.send(size)
-        sock.send(stringData)
-    while((time.time()-start_time1)<3):
+        sock.sendto(size,(UDP_IP, UDP_PORT))
+        send_chuncks(stringData,lent)
+    while((time.time()-start_time1)<0):
         pass
 end_time = time.time()
 vid.release()
