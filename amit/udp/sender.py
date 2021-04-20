@@ -4,12 +4,14 @@ import time
 import socket
 import cv2 
 import numpy
+import os
 from time import sleep
 
 #TCP_IP = "localhost" 
 UDP_PORT = 5003
-UDP_IP = '192.168.86.87'
-
+UDP_IP = '192.168.8.102'
+rx=1920
+ry=1080
 shared_region = [0,33,50,66,100]
 res_of_region = [360,160,96,70,5]
 
@@ -20,9 +22,6 @@ iters = int(sys.argv[3])
 
 reg_size = res_of_region[resolution]
 per      = shared_region[percentage]
-vid = cv2.VideoCapture(0) 
-vid.set(cv2.CAP_PROP_FRAME_WIDTH,512)
-vid.set(cv2.CAP_PROP_FRAME_HEIGHT,512)
 
 sock = socket.socket(socket.AF_INET, # Internet
                      socket.SOCK_DGRAM) # UDP
@@ -37,32 +36,42 @@ def send_chuncks(data,lent):
         dt = data[i+65000:]
         sock.sendto(dt,(UDP_IP, UDP_PORT))
 for j in range(iters):
+    vid = cv2.VideoCapture(0) 
+    vid.set(cv2.CAP_PROP_FRAME_WIDTH,rx)
+    vid.set(cv2.CAP_PROP_FRAME_HEIGHT,ry)
     start_time1 = time.time()
     ret, image = vid.read() 
+    vid.release()
     num_regions = ((percentage!=0) and (percentage!=4)) +1
-    
     images=[]
     if(num_regions==2):
         im1_x_r = int(reg_size * per/100)
-        im1_x_o = int(512 * per/100)
-        im2_x  = 512- im1_x_o
-        im1= cv2.resize(image[0:512,0:im1_x_o],(im1_x_r,reg_size))
-        im2=image[0:512,im1_x_o:512]
+        im1_x_o = int(rx * per/100)
+        im2_x  = rx- im1_x_o
+        im1= cv2.resize(image[0:ry,0:im1_x_o],(im1_x_r,reg_size))
+        im2=image[0:ry,im1_x_o:rx]
         images = [im1,im2]
     elif(per == 100):
         images = [cv2.resize(image,(reg_size,reg_size))]
     else:
         images = [image]
     im_no=1
+    os.system("sudo ifconfig wlan0 up")
     for im in images:
         result, imgencode = cv2.imencode('.ppm', im)
         data = numpy.array(imgencode)
         stringData = data.tostring()
         lent = len(stringData)
         size = str(lent).ljust(16).encode('utf-8')
-        sock.sendto(size,(UDP_IP, UDP_PORT))
+        while(1):
+            try:
+                sock.sendto(size,(UDP_IP, UDP_PORT))
+                break
+            except:
+                pass
         send_chuncks(stringData,lent)
-    while((time.time()-start_time1)<0):
+    os.system("sudo ifconfig wlan0 down")
+    while((time.time()-start_time1)<10):
         pass
 end_time = time.time()
 vid.release()
